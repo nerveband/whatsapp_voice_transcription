@@ -8,6 +8,48 @@ const ProgressBar = require('progress');
 const { transcribeAudio, translateAudio } = require('./speech_to_text');
 require('dotenv').config();
 
+const { Configuration, OpenAIApi } = require('openai');
+const configuration = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAIApi(configuration);
+
+async function getSummaryAndActionSteps(text) {
+  const prompt = `Please summarize the following message and provide any action steps. For action steps, give them a heading and use the checkmark emoji next to them if there are any:\n\n${text}`;
+
+  try {
+    const response = await axios.post(
+      'https://api.openai.com/v1/completions',
+      {
+        model: 'text-davinci-003',
+        prompt: prompt,
+        max_tokens: 100,
+        n: 1,
+        stop: null,
+        temperature: 0.5,
+        top_p: 1.0,
+        frequency_penalty: 0.0,
+        presence_penalty: 0.0,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        },
+      }
+    );
+
+    // Check if the response has the 'choices' property and at least one choice
+    if (response && response.data && response.data.choices && response.data.choices.length > 0) {
+      return response.data.choices[0].text.trim();
+    } else {
+      console.error('Error: Unexpected response format from OpenAI API. Status:', response.status, 'Data:', response.data);
+      return '';
+    }
+  } catch (error) {
+    console.error('Error during summary and action steps generation:', error);
+    return '';
+  }
+}
+
 const client = new Client({
   authStrategy: new LocalAuth(),
 });
@@ -58,7 +100,9 @@ client.on('message', async (msg) => {
         const outputText = translation.text || transcription.text;
 
         if (outputText) {
-          console.log('Sending transcription to self...');
+          console.log('Generating summary and action steps...');
+          const summaryAndActionSteps = await getSummaryAndActionSteps(outputText);
+          console.log('Summary and action steps generated.');
 
           // Clean and format the phone number
           const sanitizedNumber = myNumber.replace(/[- )(]/g, '');
@@ -67,8 +111,8 @@ client.on('message', async (msg) => {
 
           if (numberId) {
             // Add sender's information and the time the message was sent to the transcription output
-            const senderInfo = `Sender: ${msg.from}\nTime: ${new Date(msg.timestamp * 1000).toLocaleString()}\n\n`;
-            const fullMessage = `You just got a voice note from...:\n\n${senderInfo}\n\n${outputText}`;
+            const senderInfo = `Sender: ${msg.sender ? msg.sender.pushname : "Unknown"} (${msg.from})\nTime: ${new Date(msg.timestamp * 1000).toLocaleString()}\n\n`;
+            const fullMessage = `You just got a voice note from:\n${senderInfo}**Summary and Action Steps:**\n${summaryAndActionSteps}\n\n**Full Transcription:**\n${outputText}`;
             
             await client.sendMessage(numberId._serialized, fullMessage);
             console.log('Transcription sent.');
@@ -78,6 +122,7 @@ client.on('message', async (msg) => {
         } else {
           console.log('Error: Failed to process voice note.');
         }
+
 
     } catch (error) {
       console.log('Error:', error);
