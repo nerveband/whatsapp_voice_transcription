@@ -13,7 +13,7 @@ const configuration = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
 const openai = new OpenAIApi(configuration);
 
 async function getSummaryAndActionSteps(text) {
-    const prompt = `Please summarize the following message and provide any action steps. For action steps, give them a heading and use the white heavy check mark emoji next to them if there are any:\n\n${text}`;
+    const prompt = `Please summarize the following message and provide any action steps. For action steps, use a new paragraph and new line, give them a heading formatted with a single asterisk on either side and use the checkmark emoji next to each action item, if there are any:\n\n${text}`;
 
   try {
     const response = await axios.post(
@@ -111,8 +111,10 @@ client.on('message', async (msg) => {
 
           if (numberId) {
             // Add sender's information and the time the message was sent to the transcription output
-            const senderInfo = `Sender: ${msg.sender ? msg.sender.pushname : "Unknown"} (${msg.from})\nTime: ${new Date(msg.timestamp * 1000).toLocaleString()}\n\n`;
-            const fullMessage = `You just got a voice note from:\n${senderInfo}*Summary and Action Steps:*\n${summaryAndActionSteps}\n\n*Full Transcription:*\n${outputText}`;
+           const contact = await msg.getContact();
+           const senderInfo = `*Sender:* ${contact.pushname || 'Unknown'} (${msg.from})\n*Time:* ${new Date(msg.timestamp * 1000).toLocaleString()}\n\n`;
+
+           const fullMessage = `New Voice Note!\n${senderInfo}*Transcript Summary:*\n${summaryAndActionSteps}\n\n*Full Transcription:*\n${outputText}`;
             
             await client.sendMessage(numberId._serialized, fullMessage);
             console.log('Transcription sent.');
