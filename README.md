@@ -41,8 +41,8 @@ Before you start, make sure you have the following installed:
 5. Set the necessary environment variables in the `.env` file:
 
    ```
-   WHATSAPP_PHONE_NUMBER=<your whatsapp phone number>
-   OPENAI_API_KEY=<path to your Google Cloud Platform Service Account JSON file>
+   WHATSAPP_PHONE_NUMBER=<your whatsapp phone number such as +15551234567 including plus and country code>
+   OPENAI_API_KEY=<insert your OpenAI Key here>
    ```
    
 6. Run the application:
