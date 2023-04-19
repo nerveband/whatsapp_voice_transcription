@@ -1,0 +1,29 @@
+2023/04/19-10:00:13.291 8803 Reusing MANIFEST /Users/nerveband/whatsapp-web/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2023/04/19-10:00:13.292 8803 Recovering log #2725
+2023/04/19-10:00:13.304 8803 Reusing old log /Users/nerveband/whatsapp-web/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/002725.log 
+2023/04/19-10:01:24.709 15a07 Compacting 1@1 + 11@2 files
+2023/04/19-10:01:24.808 15a07 Generated table #2753@1: 100712 keys, 2250682 bytes
+2023/04/19-10:01:24.875 15a07 Generated table #2754@1: 101326 keys, 2252591 bytes
+2023/04/19-10:01:24.958 15a07 Generated table #2755@1: 98457 keys, 2248618 bytes
+2023/04/19-10:01:25.050 15a07 Generated table #2756@1: 100288 keys, 2248640 bytes
+2023/04/19-10:01:25.116 15a07 Generated table #2757@1: 102335 keys, 2251628 bytes
+2023/04/19-10:01:25.185 15a07 Generated table #2758@1: 98835 keys, 2249774 bytes
+2023/04/19-10:01:25.254 15a07 Generated table #2759@1: 101620 keys, 2251297 bytes
+2023/04/19-10:01:25.320 15a07 Generated table #2760@1: 99644 keys, 2250072 bytes
+2023/04/19-10:01:25.390 15a07 Generated table #2761@1: 101560 keys, 2252160 bytes
+2023/04/19-10:01:25.457 15a07 Generated table #2762@1: 101036 keys, 2252200 bytes
+2023/04/19-10:01:25.477 15a07 Generated table #2763@1: 23142 keys, 519556 bytes
+2023/04/19-10:01:25.477 15a07 Compacted 1@1 + 11@2 files => 23027218 bytes
+2023/04/19-10:01:25.486 15a07 compacted to: files[ 0 1 43 0 0 0 0 ]
+2023/04/19-10:01:25.487 15a07 Delete type=2 #2729
+2023/04/19-10:01:25.487 15a07 Delete type=2 #2676
+2023/04/19-10:01:25.487 15a07 Delete type=2 #2677
+2023/04/19-10:01:25.487 15a07 Delete type=2 #2682
+2023/04/19-10:01:25.487 15a07 Delete type=2 #2694
+2023/04/19-10:01:25.487 15a07 Delete type=2 #2680
+2023/04/19-10:01:25.487 15a07 Delete type=2 #2681
+2023/04/19-10:01:25.487 15a07 Delete type=2 #2695
+2023/04/19-10:01:25.487 15a07 Delete type=2 #2692
+2023/04/19-10:01:25.487 15a07 Delete type=2 #2679
+2023/04/19-10:01:25.487 15a07 Delete type=2 #2678
+2023/04/19-10:01:25.487 15a07 Delete type=2 #2693
