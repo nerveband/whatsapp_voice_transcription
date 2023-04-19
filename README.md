@@ -1,4 +1,4 @@
-# Whatsapp Voice Note Transcription
+# WhatsApp Voice Note Transcription
 
 This Node.js application aids in transcribing voice notes sent via WhatsApp. The app can transcribe voice notes to text using OpenAI's Whisper API, and if necessary, translate the text to the language of the user's choice. The transcription is then sent to the user's WhatsApp account.
 
@@ -11,7 +11,7 @@ Before you start, make sure you have the following installed:
 * Node.js
 * npm
 * WhatsApp account
-* OAuth credentials from Google Cloud Platform for the Speech to Text API
+* OAPI Key from OpenAI Whisper's API
 
 ### Installing
 1. Clone the repository to your local machine: 
@@ -42,7 +42,7 @@ Before you start, make sure you have the following installed:
 
    ```
    WHATSAPP_PHONE_NUMBER=<your whatsapp phone number>
-   GOOGLE_APPLICATION_CREDENTIALS=<path to your Google Cloud Platform Service Account JSON file>
+   OPENAI_API_KEY=<path to your Google Cloud Platform Service Account JSON file>
    ```
    
 6. Run the application:
