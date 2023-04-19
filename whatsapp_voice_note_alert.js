@@ -67,9 +67,9 @@ client.on('message', async (msg) => {
 
           if (numberId) {
             // Add sender's information and the time the message was sent to the transcription output
-            const senderInfo = `Sender: ${msg.from}\nTime: ${msg.timestamp.toLocaleString()}\n\n`;
-            const fullMessage = `You just got a voice note from...:\n\n${senderInfo}\n\n$${outputText}`;
-
+            const senderInfo = `Sender: ${msg.from}\nTime: ${new Date(msg.timestamp * 1000).toLocaleString()}\n\n`;
+            const fullMessage = `You just got a voice note from...:\n\n${senderInfo}\n\n${outputText}`;
+            
             await client.sendMessage(numberId._serialized, fullMessage);
             console.log('Transcription sent.');
           } else {
