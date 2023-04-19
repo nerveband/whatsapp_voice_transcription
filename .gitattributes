@@ -1,0 +1,2 @@
+node_modules/electron/dist/Electron.app/Contents/Frameworks/Electron[[:space:]]Framework.framework/Versions/A/Electron[[:space:]]Framework filter=lfs diff=lfs merge=lfs -text
+node_modules/whatsapp-web.js/node_modules/puppeteer/.local-chromium/mac-982053/chrome-mac/Chromium.app/Contents/Frameworks/Chromium[[:space:]]Framework.framework/Versions/101.0.4950.0/Chromium[[:space:]]Framework filter=lfs diff=lfs merge=lfs -text
