@@ -21,6 +21,7 @@ async function transcribeAudio(filePath) {
 
 async function translateAudio(filePath) {
   const formData = new FormData();
+  formData.append('initial_prompt', 'Umm, let me think like, hmm... Okay, here\'s what...uh...I\'m, like, thinking.');
   formData.append('file', fs.createReadStream(filePath));
   formData.append('model', 'whisper-1');
   formData.append('response_format', 'json');
