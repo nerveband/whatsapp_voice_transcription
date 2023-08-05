@@ -13,7 +13,7 @@ Before you start, make sure you have the following installed:
 * Node.js
 * npm
 * WhatsApp account
-* API Key from OpenAI Whisper's API
+* API Key from OpenAI for GPT and Whisper APIs
 
 ### Installing
 1. Clone the repository to your local machine: 
@@ -57,7 +57,7 @@ Before you start, make sure you have the following installed:
 
 ## Usage
 
-After following the installation steps above, simply send a voice note to your WhatsApp account. The app will then convert the voice note to text, and if necessary, translate the text.
+After following the installation steps above, simply send a voice note to your WhatsApp account. The app will then convert the voice note to text, and if necessary, translate the text. It will also use GPT 3.5 to give you a summary of the transcript along with action steps.
 
 ## Built With
 
@@ -68,6 +68,7 @@ After following the installation steps above, simply send a voice note to your W
 * [fluent-ffmpeg](https://github.com/fluent-ffmpeg/node-fluent-ffmpeg) - A Node.js wrapper for FFmpeg
 * [progress](https://github.com/tj/node-progress) - A Node.js module that makes it easy to create progress bars
 * [dotenv](https://github.com/motdotla/dotenv) - A zero-dependency module that loads environment variables from a .env file
+* [compromise](https://github.com/spencermountain/compromise) - A modest natural language processing library for Node.js.
 
 ## Authors
 
