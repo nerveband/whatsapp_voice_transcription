@@ -1,6 +1,9 @@
 const axios = require('axios');
 const FormData = require('form-data');
 const fs = require('fs');
+// const natural = require('natural');
+const nlp = require('compromise');
+
 require('dotenv').config();
 
 async function transcribeAudio(filePath) {
@@ -16,22 +19,32 @@ async function transcribeAudio(filePath) {
     },
   });
 
-  return response.data;
-}
+// Log the entire response object
+  console.log('Response from server:', response.data);
 
-async function translateAudio(filePath) {
-  const formData = new FormData();
-  formData.append('initial_prompt', 'Umm, let me think like, hmm... Okay, here\'s what...uh...I\'m, like, thinking.');
-  formData.append('file', fs.createReadStream(filePath));
-  formData.append('model', 'whisper-1');
-  formData.append('response_format', 'json');
-  formData.append('translate_to', 'en');
+  const transcript = response.data.text || '';
+  const doc = nlp(transcript);
+  const sentences = doc.sentences().out('array');
+  const paragraphs = [];
+  let currentParagraph = [];
 
-  const response = await axios.post('https://api.openai.com/v1/audio/translations', formData, {
-    headers: {
-      ...formData.getHeaders(),
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-    },
+  sentences.forEach((sentence) => {
+  currentParagraph.push(sentence);
+  if (currentParagraph.length > 3) {
+    paragraphs.push(currentParagraph.join(' '));
+    currentParagraph = [];
+  }
+  });
+
+  if (currentParagraph.length > 0) {
+    paragraphs.push(currentParagraph.join(' '));
+  }
+
+  response.data.paragraphs = paragraphs;
+
+  console.log('Transcript broken into paragraphs:');
+  paragraphs.forEach((paragraph, index) => {
+      console.log(`Paragraph ${index + 1}:`, paragraph);
   });
 
   return response.data;
@@ -39,5 +52,4 @@ async function translateAudio(filePath) {
 
 module.exports = {
   transcribeAudio,
-  translateAudio,
 };

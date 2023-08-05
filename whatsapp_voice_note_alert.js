@@ -5,22 +5,29 @@ const axios = require('axios');
 const FormData = require('form-data');
 const ffmpeg = require('fluent-ffmpeg');
 const ProgressBar = require('progress');
-const { transcribeAudio, translateAudio } = require('./speech_to_text');
+const { transcribeAudio } = require('./speech_to_text');
 require('dotenv').config();
 
-const { Configuration, OpenAIApi } = require('openai');
-const configuration = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
-const openai = new OpenAIApi(configuration);
+const natural = require('natural');
 
 async function getSummaryAndActionSteps(text) {
-    const prompt = `Please summarize the following message and provide any action steps. For action steps, use a new paragraph and new line, give them a heading formatted with a single asterisk on either side and use the checkmark emoji next to each action item, if there are any:\n\n${text}`;
+  const messages = [
+    {
+      "role": "system",
+      "content": "Please summarize the following message and provide any action steps. For action steps, use a new paragraph and new line, give them a heading formatted with a single asterisk on either side and use the checkmark emoji next to each action item, if there are any:"
+    },
+    {
+      "role": "user",
+      "content": text
+    }
+  ];
 
   try {
     const response = await axios.post(
-      'https://api.openai.com/v1/completions',
+      'https://api.openai.com/v1/chat/completions',
       {
-        model: 'text-davinci-003',
-        prompt: prompt,
+        model: 'gpt-3.5-turbo',
+        messages: messages,
         max_tokens: 2000,
         n: 1,
         stop: null,
@@ -39,7 +46,7 @@ async function getSummaryAndActionSteps(text) {
 
     // Check if the response has the 'choices' property and at least one choice
     if (response && response.data && response.data.choices && response.data.choices.length > 0) {
-      return response.data.choices[0].text.trim();
+      return response.data.choices[0].message.content;
     } else {
       console.error('Error: Unexpected response format from OpenAI API. Status:', response.status, 'Data:', response.data);
       return '';
@@ -49,6 +56,9 @@ async function getSummaryAndActionSteps(text) {
     return '';
   }
 }
+
+// ... rest of your code ...
+
 
 const client = new Client({
   authStrategy: new LocalAuth(),
@@ -92,40 +102,35 @@ client.on('message', async (msg) => {
       const transcription = await transcribeAudio(m4aFilename);
       console.log('Voice note transcribed.');
 
-      console.log('Translating voice note (if necessary)...');
-      const translation = await translateAudio(m4aFilename);
-      console.log('Voice note translated (if necessary).');
+      const myNumber = process.env.WHATSAPP_PHONE_NUMBER;
+      const outputText = transcription.paragraphs.join('\n\n');
+      console.log('Output text:', outputText); // Debugging statement
 
-        const myNumber = process.env.WHATSAPP_PHONE_NUMBER;
-        const outputText = translation.text || transcription.text;
+      if (outputText) {
+        console.log('Generating summary and action steps...');
+        const summaryAndActionSteps = await getSummaryAndActionSteps(outputText);
+        console.log('Summary and action steps generated.');
 
-        if (outputText) {
-          console.log('Generating summary and action steps...');
-          const summaryAndActionSteps = await getSummaryAndActionSteps(outputText);
-          console.log('Summary and action steps generated.');
+        // Clean and format the phone number
+        const sanitizedNumber = myNumber.replace(/[- )(]/g, '');
+        const finalNumber = `1${sanitizedNumber.substring(sanitizedNumber.length - 10)}`;
+        const numberId = await client.getNumberId(finalNumber);
 
-          // Clean and format the phone number
-          const sanitizedNumber = myNumber.replace(/[- )(]/g, '');
-          const finalNumber = `1${sanitizedNumber.substring(sanitizedNumber.length - 10)}`;
-          const numberId = await client.getNumberId(finalNumber);
+        if (numberId) {
+          // Add sender's information and the time the message was sent to the transcription output
+          const contact = await msg.getContact();
+          const senderInfo = `*Sender:* ${contact.pushname || 'Unknown'} (${msg.from})\n*Time:* ${new Date(msg.timestamp * 1000).toLocaleString()}\n\n`;
 
-          if (numberId) {
-            // Add sender's information and the time the message was sent to the transcription output
-           const contact = await msg.getContact();
-           const senderInfo = `*Sender:* ${contact.pushname || 'Unknown'} (${msg.from})\n*Time:* ${new Date(msg.timestamp * 1000).toLocaleString()}\n\n`;
+          const fullMessage = `New Voice Note!\n${senderInfo}*Transcript Summary:*\n${summaryAndActionSteps}\n\n*Full Transcription:*\n${outputText}`;
 
-           const fullMessage = `New Voice Note!\n${senderInfo}*Transcript Summary:*\n${summaryAndActionSteps}\n\n*Full Transcription:*\n${outputText}`;
-            
-            await client.sendMessage(numberId._serialized, fullMessage);
-            console.log('Transcription sent.');
-          } else {
-            console.log(`${finalNumber} Mobile number is not registered.`);
-          }
+          await client.sendMessage(numberId._serialized, fullMessage);
+          console.log('Transcription sent.');
         } else {
-          console.log('Error: Failed to process voice note.');
+          console.log(`${finalNumber} Mobile number is not registered.`);
         }
-
-
+      } else {
+        console.log('Error: Failed to process voice note.');
+      }
     } catch (error) {
       console.log('Error:', error);
     } finally {
@@ -134,6 +139,7 @@ client.on('message', async (msg) => {
     }
   }
 });
+
 
 client.on('error', (error) => {
   console.error('Error:', error);

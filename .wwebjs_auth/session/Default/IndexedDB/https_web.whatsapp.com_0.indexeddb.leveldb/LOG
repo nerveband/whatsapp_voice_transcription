@@ -1,13 +1,3 @@
-2023/04/19-16:33:42.430 f703 Reusing MANIFEST /Users/nerveband/whatsapp-web/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2023/04/19-16:33:42.431 f703 Recovering log #3152
-2023/04/19-16:33:42.437 f703 Reusing old log /Users/nerveband/whatsapp-web/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/003152.log 
-2023/04/19-16:34:01.465 f703 Compacting 1@1 + 3@2 files
-2023/04/19-16:34:01.538 f703 Generated table #3192@1: 101469 keys, 2251150 bytes
-2023/04/19-16:34:01.604 f703 Generated table #3193@1: 100788 keys, 2251761 bytes
-2023/04/19-16:34:01.635 f703 Generated table #3194@1: 20484 keys, 494648 bytes
-2023/04/19-16:34:01.635 f703 Compacted 1@1 + 3@2 files => 4997559 bytes
-2023/04/19-16:34:01.644 f703 compacted to: files[ 0 0 40 0 0 0 0 ]
-2023/04/19-16:34:01.645 f703 Delete type=2 #3150
-2023/04/19-16:34:01.645 f703 Delete type=2 #3157
-2023/04/19-16:34:01.645 f703 Delete type=2 #3148
-2023/04/19-16:34:01.645 f703 Delete type=2 #3149
+2023/08/04-22:59:41.442 11403 Reusing MANIFEST /Users/nerveband/wavedepth Dropbox/Ashraf Ali/Mac (2)/Documents/GitHub/whatsapp-web/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2023/08/04-22:59:41.444 11403 Recovering log #5162
+2023/08/04-22:59:41.449 11403 Reusing old log /Users/nerveband/wavedepth Dropbox/Ashraf Ali/Mac (2)/Documents/GitHub/whatsapp-web/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/005162.log 
