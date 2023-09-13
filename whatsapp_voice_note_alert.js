@@ -57,9 +57,6 @@ async function getSummaryAndActionSteps(text) {
   }
 }
 
-// ... rest of your code ...
-
-
 const client = new Client({
   authStrategy: new LocalAuth(),
 });
@@ -84,7 +81,7 @@ async function convertAudio(inputFilename, outputFilename) {
 }
 
 client.on('message', async (msg) => {
-  if (msg.hasMedia && msg.type === 'ptt') {
+  if (msg.hasMedia && (msg.type === 'ptt' || msg.isForwarded)) {
     console.log('Voice note received.');
     const media = await msg.downloadMedia();
     const oggBuffer = Buffer.from(media.data, 'base64');
@@ -102,7 +99,6 @@ client.on('message', async (msg) => {
       const transcription = await transcribeAudio(m4aFilename);
       console.log('Voice note transcribed.');
 
-      const myNumber = process.env.WHATSAPP_PHONE_NUMBER;
       const outputText = transcription.paragraphs.join('\n\n');
       console.log('Output text:', outputText); // Debugging statement
 
@@ -111,22 +107,20 @@ client.on('message', async (msg) => {
         const summaryAndActionSteps = await getSummaryAndActionSteps(outputText);
         console.log('Summary and action steps generated.');
 
-        // Clean and format the phone number
-        const sanitizedNumber = myNumber.replace(/[- )(]/g, '');
-        const finalNumber = `1${sanitizedNumber.substring(sanitizedNumber.length - 10)}`;
-        const numberId = await client.getNumberId(finalNumber);
+        // Send the transcription to the sender
+        const senderNumberId = msg.from;
 
-        if (numberId) {
+        if (senderNumberId) {
           // Add sender's information and the time the message was sent to the transcription output
           const contact = await msg.getContact();
           const senderInfo = `*Sender:* ${contact.pushname || 'Unknown'} (${msg.from})\n*Time:* ${new Date(msg.timestamp * 1000).toLocaleString()}\n\n`;
 
-          const fullMessage = `New Voice Note!\n${senderInfo}*Transcript Summary:*\n${summaryAndActionSteps}\n\n*Full Transcription:*\n${outputText}`;
+          const fullMessage = `Ashraf's robot has transcribed + summarized your voice message below:\n${senderInfo}*Transcript Summary:*\n${summaryAndActionSteps}\n\n*Full Transcription:*\n${outputText}`;
 
-          await client.sendMessage(numberId._serialized, fullMessage);
+          await client.sendMessage(senderNumberId, fullMessage);
           console.log('Transcription sent.');
         } else {
-          console.log(`${finalNumber} Mobile number is not registered.`);
+          console.log('Error: Failed to get sender number ID.');
         }
       } else {
         console.log('Error: Failed to process voice note.');
@@ -139,7 +133,6 @@ client.on('message', async (msg) => {
     }
   }
 });
-
 
 client.on('error', (error) => {
   console.error('Error:', error);
