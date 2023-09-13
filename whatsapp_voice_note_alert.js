@@ -14,7 +14,7 @@ async function getSummaryAndActionSteps(text) {
   const messages = [
     {
       "role": "system",
-      "content": "Please summarize the following message and provide any action steps. For action steps, use a new paragraph and new line, give them a heading formatted with a single asterisk on either side and use the checkmark emoji next to each action item, if there are any:"
+      "content": "Please succinctly summarize the following transcript and provide any action steps. For action steps, use a new paragraph and new line, give them a heading formatted with a single asterisk on either side and use the checkmark emoji next to each action item, if there are any:"
     },
     {
       "role": "user",
@@ -115,7 +115,7 @@ client.on('message', async (msg) => {
           const contact = await msg.getContact();
           const senderInfo = `*Sender:* ${contact.pushname || 'Unknown'} (${msg.from})\n*Time:* ${new Date(msg.timestamp * 1000).toLocaleString()}\n\n`;
 
-          const fullMessage = `Ashraf's robot has transcribed + summarized your voice message below:\n${senderInfo}*Transcript Summary:*\n${summaryAndActionSteps}\n\n*Full Transcription:*\n${outputText}`;
+          const fullMessage = `The sender's robot has transcribed + summarized your voice message below:\n${senderInfo}*Transcript Summary:*\n${summaryAndActionSteps}\n\n*Full Transcription:*\n${outputText}`;
 
           await client.sendMessage(senderNumberId, fullMessage);
           console.log('Transcription sent.');
