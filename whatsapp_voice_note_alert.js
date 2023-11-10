@@ -14,7 +14,7 @@ async function getSummaryAndActionSteps(text) {
   const messages = [
     {
       "role": "system",
-      "content": "Please succinctly summarize the following transcript and provide any action steps. For action steps, use a new paragraph and new line, give them a heading formatted with a single asterisk on either side and use the checkmark emoji next to each action item, if there are any:"
+      "content": "Kindly provide a concise summary of the message below. If applicable, identify any necessary action steps. For each action step, begin a new paragraph, format the heading with asterisks for emphasis, and precede the instructions with a checkmark emoji to highlight them. Please ensure that the action steps are clear, direct, and actionable."
     },
     {
       "role": "user",
@@ -57,6 +57,9 @@ async function getSummaryAndActionSteps(text) {
   }
 }
 
+// ... rest of your code ...
+
+
 const client = new Client({
   authStrategy: new LocalAuth(),
 });
@@ -81,7 +84,7 @@ async function convertAudio(inputFilename, outputFilename) {
 }
 
 client.on('message', async (msg) => {
-  if (msg.hasMedia && (msg.type === 'ptt' || msg.isForwarded)) {
+  if (msg.hasMedia && msg.type === 'ptt') {
     console.log('Voice note received.');
     const media = await msg.downloadMedia();
     const oggBuffer = Buffer.from(media.data, 'base64');
@@ -107,32 +110,27 @@ client.on('message', async (msg) => {
         const summaryAndActionSteps = await getSummaryAndActionSteps(outputText);
         console.log('Summary and action steps generated.');
 
-        // Send the transcription to the sender
-        const senderNumberId = msg.from;
+        // No need to sanitize or format the number, as we're sending the message back to the sender
+        const senderId = msg.from;
 
-        if (senderNumberId) {
-          // Add sender's information and the time the message was sent to the transcription output
-          const contact = await msg.getContact();
-          const senderInfo = `*Sender:* ${contact.pushname || 'Unknown'} (${msg.from})\n*Time:* ${new Date(msg.timestamp * 1000).toLocaleString()}\n\n`;
+        // New message format
+        const fullMessage = `Your voice note has been transcribed: \n\n*Summary:*\n${summaryAndActionSteps}\n\n*Full Transcript:*\n${outputText}`;
 
-          const fullMessage = `The sender's robot has transcribed + summarized your voice message below:\n${senderInfo}*Transcript Summary:*\n${summaryAndActionSteps}\n\n*Full Transcription:*\n${outputText}`;
-
-          await client.sendMessage(senderNumberId, fullMessage);
-          console.log('Transcription sent.');
-        } else {
-          console.log('Error: Failed to get sender number ID.');
-        }
+        await client.sendMessage(senderId, fullMessage);
+        console.log('Transcription sent back to the sender.');
       } else {
         console.log('Error: Failed to process voice note.');
       }
     } catch (error) {
       console.log('Error:', error);
     } finally {
+      // Clean up the audio files
       fs.unlinkSync(oggFilename);
       fs.unlinkSync(m4aFilename);
     }
   }
 });
+
 
 client.on('error', (error) => {
   console.error('Error:', error);
