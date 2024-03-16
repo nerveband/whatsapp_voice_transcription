@@ -19,7 +19,7 @@
     "form-data": "^4.0.0",
     "fs": "^0.0.1-security",
     "natural": "^6.5.0",
-    "openai": "^3.3.0",
+    "openai": "^4.29.1",
     "puppeteer": "^21.0.0",
     "qrcode-generator": "^1.4.4",
     "qrcode-terminal": "^0.12.0",

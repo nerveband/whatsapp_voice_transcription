@@ -57,8 +57,6 @@ async function getSummaryAndActionSteps(text) {
   }
 }
 
-// ... rest of your code ...
-
 
 const client = new Client({
   authStrategy: new LocalAuth(),
@@ -114,7 +112,7 @@ client.on('message', async (msg) => {
         const senderId = msg.from;
 
         // New message format
-        const fullMessage = `Your voice note has been transcribed: \n\n*Summary:*\n${summaryAndActionSteps}\n\n*Full Transcript:*\n${outputText}`;
+        const fullMessage = `Your voice note has been transcribed:\n\n*Summary:*\n${summaryAndActionSteps}\n\n*Full Transcript:*\n${outputText}`;
 
         await client.sendMessage(senderId, fullMessage);
         console.log('Transcription sent back to the sender.');
