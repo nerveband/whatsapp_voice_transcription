@@ -1,28 +1,31 @@
 {
   "name": "whatsapp-web",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.2.0",
+  "description": "Transcribe voice notes sent via WhatsApp.",
   "main": "index.js",
   "scripts": {
+    "start": "node whatsapp_voice_note_alert.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "axios": "^1.4.0",
+    "@anthropic-ai/sdk": "^0.20.5",
+    "@deepgram/sdk": "^3.2.0",
+    "axios": "^1.6.8",
     "cli-progress": "^3.12.0",
-    "compromise": "^14.9.0",
-    "dotenv": "^16.3.1",
+    "compromise": "^14.13.0",
+    "dotenv": "^16.4.5",
     "ffprobe-client": "^1.1.6",
     "fluent-ffmpeg": "^2.1.2",
     "form-data": "^4.0.0",
     "fs": "^0.0.1-security",
-    "natural": "^6.5.0",
-    "openai": "^4.29.1",
-    "puppeteer": "^21.0.0",
+    "natural": "^7.0.0",
+    "openai": "^4.35.0",
+    "puppeteer": "^22.6.5",
     "qrcode-generator": "^1.4.4",
     "qrcode-terminal": "^0.12.0",
-    "whatsapp-web.js": "^1.21.0"
+    "whatsapp-web.js": "^1.23.0"
   }
 }
