@@ -66,7 +66,7 @@ After following the installation steps above, simply send a voice note to your o
 
 ## Built With
 
-* [whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js) - A WhatsApp Web client library
+* [@whiskeysockets/baileys](https://github.com/whiskeysockets/Baileys) - A WhatsApp Web API library for Node.js
 * [qrcode-terminal](https://github.com/gtanner/qrcode-terminal) - A terminal QR code generator 
 * [axios](https://github.com/axios/axios) - A Promise-based HTTP client
 * [form-data](https://github.com/form-data/form-data) - A module which allows you to submit forms in Node.js
@@ -75,8 +75,6 @@ After following the installation steps above, simply send a voice note to your o
 * [openai](https://www.npmjs.com/package/openai) - The OpenAI Node.js library
 * [@anthropic-ai/sdk](https://www.npmjs.com/package/@anthropic-ai/sdk) - Anthropic's Node.js library
 * [@deepgram/sdk](https://www.npmjs.com/package/@deepgram/sdk) - Deepgram's Node.js SDK
-
-Note: Due to WhatsApp Web's change from webpack to comet, a temporary fix has been put in place until there is a new release of whatsapp-web.js.
 
 ## Authors
 
