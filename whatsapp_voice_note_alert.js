@@ -1,12 +1,12 @@
 const fs = require('fs');
-const qrcode = require('qrcode-terminal');
-const { Client, MessageMedia, LocalAuth } = require('whatsapp-web.js');
+const { writeFile } = require('fs/promises');
+const { MessageType, Mimetype, downloadContentFromMessage } = require('@whiskeysockets/baileys');
+const makeWASocket = require('@whiskeysockets/baileys').default;
+const { DisconnectReason, useMultiFileAuthState } = require('@whiskeysockets/baileys');
 const { transcribeAudio } = require('./speech_to_text');
-require('dotenv').config();
-
-// Import the OpenAI and Anthropic SDKs
 const OpenAI = require('openai');
 const Anthropic = require('@anthropic-ai/sdk');
+require('dotenv').config();
 
 // Configuration object
 const config = {
@@ -56,7 +56,7 @@ const MESSAGE_OUTPUT = {
   GENERATING_SUMMARY: "Generating summary and action steps...",
   SUMMARY_GENERATED: "Summary and action steps generated.",
   TRANSCRIPTION_SENT: "Transcription sent back to the sender.",
-  TRANSCRIPTION_SENT: "Summary sent back to the sender.",
+  SUMMARY_SENT: "Summary sent back to the sender.",
   PROCESSING_ERROR: "Error: Failed to process voice note."
 };
 
@@ -72,23 +72,24 @@ const anthropic = new Anthropic({
 async function getOpenAISummary(text) {
   try {
     // Use the OpenAI SDK to generate a summary
-    const chatCompletion = await openai.chat.completions.create({
+    const chatCompletion = await openai.createChatCompletion({
+      model: config.OPENAI_MODEL,
       messages: [
         { role: 'system', content: AI_PROMPT.OPENAI },
         { role: 'user', content: text },
       ],
-      model: config.OPENAI_MODEL,
       max_tokens: 2000,
       n: 1,
       temperature: 0.5,
     });
 
-    return chatCompletion.choices[0].message.content;
+    return chatCompletion.data.choices[0].message.content.trim();
   } catch (error) {
     console.error('Error during OpenAI summary generation:', error);
     throw error;
   }
 }
+
 
 async function getAnthropicSummary(text) {
     console.log("Debug: Attempting to summarize text:", text);  // Debug log to check what text is being sent
@@ -112,7 +113,6 @@ async function getAnthropicSummary(text) {
     }
 }
 
-
 async function getSummaryAndActionSteps(text) {
   try {
     if (config.AI_SERVICE === 'OPENAI') {
@@ -126,78 +126,130 @@ async function getSummaryAndActionSteps(text) {
   }
 }
 
-const client = new Client({
-  authStrategy: new LocalAuth(),
-  puppeteer: {
-    // puppeteer args here
-  },
-  webVersionCache: {
-    type: 'remote',
-    remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2409.0.html',
-  }
-});
+async function main() {
+  try {
+    const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
 
-client.on('qr', (qr) => {
-  console.log('QR RECEIVED', qr);
-  qrcode.generate(qr, { small: true });
-});
+    async function connectToWhatsApp() {
+      try {
+        const sock = makeWASocket({
+          printQRInTerminal: true,
+          auth: state,
+          defaultQueryTimeoutMs: undefined,
+        });
 
-client.on('ready', () => {
-  console.log('Client is ready!');
-});
+        sock.ev.on('connection.update', (update) => {
+          const { connection, lastDisconnect } = update;
+          if (connection === 'close') {
+            const shouldReconnect = lastDisconnect.error?.output?.statusCode !== DisconnectReason.loggedOut;
+            console.log('connection closed due to ', lastDisconnect.error, ', reconnecting ', shouldReconnect);
+            if (shouldReconnect) {
+              connectToWhatsApp();
+            }
+          } else if (connection === 'open') {
+            console.log('opened connection');
+          }
+        });
 
-client.on('message_create', async (msg) => {
-  if (msg.hasMedia && msg.type === 'ptt' && (msg.fromMe || msg.to === process.env.WHATSAPP_PHONE_NUMBER)) {
-    console.log(MESSAGE_OUTPUT.VOICE_NOTE_RECEIVED);
-    const media = await msg.downloadMedia();
-    const oggBuffer = Buffer.from(media.data, 'base64');
-    const oggFilename = `${msg.id.id}.ogg`;
-    fs.writeFileSync(oggFilename, oggBuffer);
+        sock.ev.on('messages.upsert', async ({ messages }) => {
+          const m = messages[0];
 
-    const audioFilename = oggFilename;
+          if (!m.message) return; // if there is no text or media message
+          if (m.key.remoteJid === 'status@broadcast') return;
 
-    try {
-      console.log(MESSAGE_OUTPUT.TRANSCRIBING_VOICE_NOTE);
-      const transcription = await transcribeAudio(audioFilename);
-      console.log(MESSAGE_OUTPUT.VOICE_NOTE_TRANSCRIBED);
+          const messageType = Object.keys(m.message)[0]; // get what type of message it is -- text, image, video
 
-      let outputText = '';
-      if (transcription) {
-        outputText = transcription;
-        console.log('Output text:', outputText);
-      }
+          if (messageType === 'audioMessage') {
+            console.log(MESSAGE_OUTPUT.VOICE_NOTE_RECEIVED);
 
-      if (outputText) {
-        const senderId = msg.fromMe ? msg.to : msg.from;
+            const buffer = await downloadContentFromMessage(m.message.audioMessage, 'audio');
+            const oggFilename = `${m.key.id}.ogg`;
+            await writeFile(oggFilename, buffer);
 
-        // Check GENERATE_SUMMARY .env variable is true
-        if (config.GENERATE_SUMMARY === 'true') {
-          console.log(MESSAGE_OUTPUT.GENERATING_SUMMARY);
-          const summaryAndActionSteps = await getSummaryAndActionSteps(outputText);
-          console.log(MESSAGE_OUTPUT.SUMMARY_GENERATED);
+            const audioFilename = oggFilename;
 
-          // Send the summary and action steps as a separate message
-          await client.sendMessage(senderId, `*Summary:*\n${summaryAndActionSteps}`);
-          console.log(MESSAGE_OUTPUT.SUMMARY_SENT);
+            try {
+              console.log(MESSAGE_OUTPUT.TRANSCRIBING_VOICE_NOTE);
+              const transcription = await transcribeAudio(audioFilename);
+              console.log(MESSAGE_OUTPUT.VOICE_NOTE_TRANSCRIBED);
+
+              let outputText = '';
+              if (transcription) {
+                outputText = transcription;
+                console.log('Output text:', outputText);
+              }
+
+              if (outputText) {
+                const senderId = m.key.remoteJid;
+
+                if (config.GENERATE_SUMMARY === 'true') {
+                  console.log(MESSAGE_OUTPUT.GENERATING_SUMMARY);
+                  const summaryAndActionSteps = await getSummaryAndActionSteps(outputText);
+                  console.log(MESSAGE_OUTPUT.SUMMARY_GENERATED);
+
+                  await sock.sendMessage(senderId, { text: `*Summary:*\n${summaryAndActionSteps}` });
+                  console.log(MESSAGE_OUTPUT.SUMMARY_SENT);
+                }
+
+                await sock.sendMessage(senderId, { text: `*Transcript:*${outputText}` });
+                console.log(MESSAGE_OUTPUT.TRANSCRIPTION_SENT);
+              } else {
+                console.log(MESSAGE_OUTPUT.PROCESSING_ERROR);
+              }
+            } catch (error) {
+              console.log('Error:', error);
+            } finally {
+              fs.unlinkSync(oggFilename);
+            }
+          }
+        });
+
+        sock.ev.on('creds.update', saveCreds);
+
+        console.log('Before connecting to WhatsApp');
+        await sock.waitForConnectionUpdate((update) => update.connection === 'open');
+        console.log('After connecting to WhatsApp');
+
+        try {
+          await sock.query({
+            tag: 'iq',
+            attrs: {
+              to: '@s.whatsapp.net',
+              type: 'set',
+              xmlns: 'w:web',
+            },
+            content: [
+              {
+                tag: 'query',
+                attrs: {},
+                content: [
+                  {
+                    tag: 'initial_queries',
+                    attrs: {},
+                    content: [],
+                  },
+                ],
+              },
+            ],
+          });
+          console.log('Initial queries executed successfully');
+        } catch (error) {
+          console.error('Error executing initial queries:', error);
         }
-
-        // Send the transcript
-        await client.sendMessage(senderId, `*Transcript:*\n${outputText}`);
-        console.log(MESSAGE_OUTPUT.TRANSCRIPTION_SENT);
-
-      } else {
-        console.log(MESSAGE_OUTPUT.PROCESSING_ERROR);
+      } catch (error) {
+        console.error('Error in connectToWhatsApp function:', error);
+        throw error;
       }
-    } catch (error) {
-      console.log('Error:', error);
-    } finally {
-      fs.unlinkSync(oggFilename);
     }
+
+    await connectToWhatsApp();
+  } catch (error) {
+    console.error('Error in main function:', error);
+    throw error;
   }
-});
+}
 
-client.on('error', (error) => {
-  console.error('Error:', error);
+main().catch((error) => {
+  console.error('Error occurred:', error);
+  process.exit(1);
 });
-
-client.initialize();

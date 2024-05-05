@@ -13,6 +13,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.20.5",
     "@deepgram/sdk": "^3.2.0",
+    "@whiskeysockets/baileys": "^6.7.1",
     "axios": "^1.6.8",
     "cli-progress": "^3.12.0",
     "compromise": "^14.13.0",
