@@ -166,38 +166,25 @@ async function main() {
             const oggFilename = `${m.key.id}.ogg`;
             await writeFile(oggFilename, buffer);
 
-            const audioFilename = oggFilename;
-
             try {
               console.log(MESSAGE_OUTPUT.TRANSCRIBING_VOICE_NOTE);
-              const transcription = await transcribeAudio(audioFilename);
-              console.log(MESSAGE_OUTPUT.VOICE_NOTE_TRANSCRIBED);
+              const transcription = await transcribeAudio(oggFilename);
 
-              let outputText = '';
               if (transcription) {
-                outputText = transcription;
-                console.log('Output text:', outputText);
-              }
-
-              if (outputText) {
                 const senderId = m.key.remoteJid;
 
                 if (config.GENERATE_SUMMARY === 'true') {
-                  console.log(MESSAGE_OUTPUT.GENERATING_SUMMARY);
-                  const summaryAndActionSteps = await getSummaryAndActionSteps(outputText);
-                  console.log(MESSAGE_OUTPUT.SUMMARY_GENERATED);
-
+                  const summaryAndActionSteps = await getSummaryAndActionSteps(transcription);
                   await sock.sendMessage(senderId, { text: `*Summary:*\n${summaryAndActionSteps}` });
-                  console.log(MESSAGE_OUTPUT.SUMMARY_SENT);
                 }
 
-                await sock.sendMessage(senderId, { text: `*Transcript:*${outputText}` });
-                console.log(MESSAGE_OUTPUT.TRANSCRIPTION_SENT);
+                await sock.sendMessage(senderId, { text: `*Transcript:*\n${transcription}` });
+                console.log('Processing completed successfully.');
               } else {
                 console.log(MESSAGE_OUTPUT.PROCESSING_ERROR);
               }
             } catch (error) {
-              console.log('Error:', error);
+              console.error('Error:', error);
             } finally {
               fs.unlinkSync(oggFilename);
             }

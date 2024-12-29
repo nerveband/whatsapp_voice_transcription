@@ -36,8 +36,6 @@ async function transcribeAudioWithDeepgram(filePath) {
       smart_format: true,
     });
 
-    // console.log('Immediate Deepgram Full Response:', JSON.stringify(result, null, 2));
-
     if (
       !result ||
       !result.results ||
@@ -52,12 +50,7 @@ async function transcribeAudioWithDeepgram(filePath) {
       return null;
     }
 
-    // Directly accessing transcript assuming the structure has been validated
-    const transcript = result.results.channels[0].alternatives[0].paragraphs.transcript;
-
-    console.log("Directly accessed Transcript:", transcript);
-
-    return transcript;
+    return result.results.channels[0].alternatives[0].paragraphs.transcript;
   } catch (error) {
     console.error("Error processing Deepgram transcription:", error);
     return null;
