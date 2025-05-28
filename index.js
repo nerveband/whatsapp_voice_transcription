@@ -136,8 +136,36 @@ async function getSummaryAndActionSteps(text) {
   }
 }
 
+// Add delay function to prevent rate limiting
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+// Function to check if auth was previously successful
+const hasSuccessfulAuth = () => {
+  try {
+    const authPath = './auth_info_baileys/creds.json';
+    if (fs.existsSync(authPath)) {
+      const creds = JSON.parse(fs.readFileSync(authPath, 'utf8'));
+      return creds && creds.me && creds.me.id;
+    }
+  } catch (error) {
+    console.error('Error checking auth state:', error);
+  }
+  return false;
+};
+
 async function main() {
   try {
+    // Determine if running in a server environment
+    const isServerEnvironment = process.env.SERVER_ENV === 'true';
+    const maxRetries = isServerEnvironment ? 3 : 5;
+    let currentRetry = 0;
+    
+    // Check if we already have valid auth
+    const hasAuth = hasSuccessfulAuth();
+    if (hasAuth) {
+      console.log('Found existing authentication, using stored credentials');
+    }
+
     // Use the built-in multi-file auth state handler with minimal setup
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
     
@@ -148,10 +176,20 @@ async function main() {
     
     async function connectToWhatsApp() {
       try {
-        // Determine if running in a server environment (no UI)
-        const isServerEnvironment = process.env.SERVER_ENV === 'true';
+        // Prevent too many rapid reconnection attempts
+        if (currentRetry > 0) {
+          const waitTime = Math.min(5000 * currentRetry, 30000); // Exponential backoff, max 30 seconds
+          console.log(`Waiting ${waitTime/1000} seconds before reconnection attempt ${currentRetry}/${maxRetries}...`);
+          await delay(waitTime);
+        }
         
-        // Create socket with configuration optimized for the environment
+        currentRetry++;
+        if (currentRetry > maxRetries) {
+          console.log(`Maximum reconnection attempts (${maxRetries}) reached. Please check your network or try again later.`);
+          return;
+        }
+        
+        // Create socket with configuration optimized for server environments
         const sock = makeWASocket({
           auth: state,
           printQRInTerminal: false, // We'll handle QR code display ourselves
@@ -169,7 +207,7 @@ async function main() {
             transactionOpts: { maxCommitRetries: 10, delayBetweenTriesMs: 3000 },
             getMessage: async () => undefined, // Avoid unnecessary fetches
             // Use retry and timeout configs that reduce server signature
-            retryRequestDelayMs: 5000,
+            retryRequestDelayMs: 10000, // Increased delay between retries
             qrTimeout: 60000,
             defaultQueryTimeoutMs: 120000
           }),
@@ -194,33 +232,75 @@ async function main() {
             console.log('\nOr use the pairing code authentication method by setting AUTH_METHOD=PAIRING_CODE in your .env file');
           }
           
-          // Handle different connection states
+          // Handle connection states with improved error handling
           if (connection === 'close') {
-            const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-            console.log('Connection closed due to ', lastDisconnect?.error, ', reconnecting: ', shouldReconnect);
+            const statusCode = lastDisconnect?.error?.output?.statusCode;
+            const errorMsg = lastDisconnect?.error?.message || 'Unknown error';
+            const location = lastDisconnect?.error?.data?.location || 'unknown';
             
-            // Reconnect if appropriate
+            console.log(`Connection closed - Status: ${statusCode}, Location: ${location}, Error: ${errorMsg}`);
+            
+            // Handle specific error codes
+            if (statusCode === 405) {
+              // 405 Method Not Allowed - WhatsApp is blocking the server IP
+              console.log('\nWARNING: Server IP appears to be blocked by WhatsApp.');
+              console.log('Consider the following options:');
+              console.log('1. Try again after waiting 10-15 minutes');
+              console.log('2. Generate auth on a non-server device and transfer the auth_info_baileys folder');
+              console.log('3. Try using a residential proxy service');
+              
+              // Still attempt to reconnect, but with a longer delay
+              await delay(10000);
+            }
+            
+            const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
             if (shouldReconnect) {
-              connectToWhatsApp();
+              // Don't reconnect immediately to avoid rapid reconnection flood
+              setTimeout(() => connectToWhatsApp(), 5000);
+            } else {
+              console.log('Logged out. Not attempting to reconnect.');
             }
           } else if (connection === 'open') {
             console.log('Connection established successfully!');
+            currentRetry = 0; // Reset retry counter on successful connection
+            
+            // Save the fact that we connected successfully
+            fs.writeFileSync('./auth_info_baileys/connection_success', new Date().toISOString());
           }
           
+          // Track if we've already requested a pairing code in this session
+          let pairingCodeRequested = false;
+          
           // Handle pairing code authentication if configured
-          if ((connection === 'connecting' || qr) && authMethod === 'PAIRING_CODE') {
+          if ((connection === 'connecting' || qr) && authMethod === 'PAIRING_CODE' && !pairingCodeRequested) {
             try {
+              // Only request pairing code once to prevent rapid changes
+              pairingCodeRequested = true;
+              
               // Format phone number (remove any non-numeric characters)
               const phoneNumber = process.env.WHATSAPP_PHONE_NUMBER.replace(/[^0-9]/g, '');
+              
+              // Delay slightly before requesting the code to ensure connection is stable
+              await delay(2000);
               
               // Request pairing code
               console.log(`Requesting pairing code for ${phoneNumber}...`);
               const code = await sock.requestPairingCode(phoneNumber);
-              console.log(`\nPairing code: ${code}\n`);
+              
+              // Display the code prominently
+              console.log('\n=======================================');
+              console.log(`PAIRING CODE: ${code}`);
+              console.log('=======================================\n');
               console.log('Enter this code on your WhatsApp mobile app:');
               console.log('WhatsApp > Settings > Linked Devices > Link a Device');
+              console.log('\nThis code will remain valid for 60 seconds.\n');
+              
+              // Reset flag after a timeout so we can request again if needed
+              setTimeout(() => { pairingCodeRequested = false; }, 60000);
             } catch (error) {
               console.error('Failed to request pairing code:', error);
+              // Reset flag after error to allow retry
+              setTimeout(() => { pairingCodeRequested = false; }, 10000);
             }
           }
         });
