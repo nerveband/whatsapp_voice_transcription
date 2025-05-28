@@ -148,12 +148,26 @@ async function main() {
     
     async function connectToWhatsApp() {
       try {
-        // Create a bare-bones socket with minimal configuration
+        // Determine if running in a server environment (no UI)
+        const isServerEnvironment = process.env.SERVER_ENV === 'true';
+        
+        // Create socket with configuration optimized for the environment
         const sock = makeWASocket({
           auth: state,
           printQRInTerminal: false, // We'll handle QR code display ourselves
-          // Use browser values that are known to work
-          browser: ['Ubuntu', 'Chrome', '20.0.04']
+          // Use browser values known to work with WhatsApp servers
+          browser: ['Chrome', 'Desktop', '104.0.0.0'],
+          // Add server-specific configurations when needed
+          ...(isServerEnvironment && {
+            // Avoid detection as server environment
+            syncFullHistory: false,
+            markOnlineOnConnect: false,
+            // Increase timeouts for server environments
+            connectTimeoutMs: 120000,
+            keepAliveIntervalMs: 15000,
+            // Avoid triggering rate limits
+            patchMessageBeforeSending: msg => msg
+          })
         });
         
         // Handle credential updates

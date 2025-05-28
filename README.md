@@ -76,6 +76,28 @@ To keep WhatsAppTranscribe running continuously in the background, you can use P
    pm2 delete WhatsAppTranscribe  # Remove from PM2
    ```
 
+### Server Environment Configuration
+
+If you're running on a server or VPS (like DigitalOcean, AWS, etc.), WhatsApp may block connections from these IP ranges. To improve connection reliability on servers:
+
+1. Set `SERVER_ENV=true` in your `.env` file:
+   ```
+   SERVER_ENV=true
+   ```
+
+2. For persistent sessions on servers, always use the same auth folder between restarts.
+
+3. If you encounter connection issues (`405 Method Not Allowed` errors):
+   - Delete the auth_info_baileys folder to start fresh
+   - Try using the pairing code method instead of QR code
+   - Set `AUTH_METHOD=PAIRING_CODE` in your `.env` file
+   - Make sure your phone number is in the correct format
+   
+4. Start the application with the server environment flag:
+   ```
+   SERVER_ENV=true pm2 start index.js --name WhatsAppTranscribe
+   ```
+
 ## Configuration
 
 The app can be configured through environment variables in your `.env` file:
