@@ -76,6 +76,62 @@ To keep WhatsAppTranscribe running continuously in the background, you can use P
    pm2 delete WhatsAppTranscribe  # Remove from PM2
    ```
 
+## Docker Deployment
+
+You can run WhatsAppTranscribe in a Docker container, which works great for NAS devices like Synology:
+
+### Prerequisites
+
+- Docker and Docker Compose installed on your system
+- For Synology: Docker package installed from Package Center
+
+### Running with Docker Compose
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/username/whatsapp-voice-transcription.git
+   cd whatsapp-voice-transcription
+   ```
+
+2. Create a `.env` file based on the example:
+   ```bash
+   cp .env.example .env
+   # Edit .env file with your API keys and settings
+   ```
+
+3. Start the container:
+   ```bash
+   docker-compose up -d
+   ```
+
+4. View logs:
+   ```bash
+   docker-compose logs -f
+   ```
+
+### Synology-specific Instructions
+
+1. Install Docker from Synology Package Center
+
+2. In Synology Docker app:
+   - Go to Registry, search for and download "node"
+   - Go to Image and verify node image is available
+
+3. Upload your project to Synology:
+   - Use File Station to create a folder (e.g., `/docker/whatsapp-transcribe/`)
+   - Upload the project files to this folder
+
+4. Create Container:
+   - In Docker app, go to Container
+   - Create a container using the Advanced Settings
+   - Use the node image, map volumes for auth data and .env file
+   - Set environment variables as needed
+
+5. Authentication on Synology:
+   - For best results, authenticate on your local machine first
+   - Copy the `auth_info_baileys` folder to your Synology
+   - Make sure your Docker container maps this volume
+
 ### Server Environment Configuration
 
 If you're running on a server or VPS (like DigitalOcean, AWS, etc.), WhatsApp may block connections from these IP ranges. This is a common issue as WhatsApp actively blocks server IP addresses to prevent automation.

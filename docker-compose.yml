@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  whatsapp-transcribe:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: whatsapp-transcribe
+    restart: unless-stopped
+    volumes:
+      - ./auth_info_baileys:/app/auth_info_baileys
+      - ./.env:/app/.env
+    environment:
+      - TZ=America/New_York
+      - SERVER_ENV=true
+      # You can uncomment the following lines to set them here instead of in .env file
+      # - AUTH_METHOD=PAIRING_CODE
+      # - WHATSAPP_PHONE_NUMBER=1234567890
+    ports:
+      # Only needed if you plan to access a web interface in the future
+      - "3000:3000"
