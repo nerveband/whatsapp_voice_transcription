@@ -111,26 +111,106 @@ You can run WhatsAppTranscribe in a Docker container, which works great for NAS 
 
 ### Synology-specific Instructions
 
-1. Install Docker from Synology Package Center
+#### Recommended Approach for Synology NAS
 
-2. In Synology Docker app:
-   - Go to Registry, search for and download "node"
-   - Go to Image and verify node image is available
+**Step 1: Authenticate locally first**
 
-3. Upload your project to Synology:
-   - Use File Station to create a folder (e.g., `/docker/whatsapp-transcribe/`)
-   - Upload the project files to this folder
+The most reliable method is to first authenticate on your local machine and then transfer the authentication data to your Synology:
 
-4. Create Container:
-   - In Docker app, go to Container
-   - Create a container using the Advanced Settings
-   - Use the node image, map volumes for auth data and .env file
-   - Set environment variables as needed
+1. On your computer:
+   ```bash
+   # Clone the repository
+   git clone https://github.com/nerveband/whatsapp_voice_transcription.git
+   cd whatsapp_voice_transcription
+   
+   # Install dependencies
+   npm install
+   
+   # Create environment file
+   cp .env.example .env
+   
+   # Edit the .env file with your API keys and configuration
+   
+   # Run the application to authenticate
+   npm start
+   ```
 
-5. Authentication on Synology:
-   - For best results, authenticate on your local machine first
-   - Copy the `auth_info_baileys` folder to your Synology
-   - Make sure your Docker container maps this volume
+2. Complete the authentication process by scanning the QR code or using the pairing code
+
+3. After successful authentication (you'll see "Connection established successfully!"), stop the application
+
+4. Copy the `auth_info_baileys` folder to your computer for transfer to Synology
+
+**Step 2: Set up on Synology**
+
+1. Install Docker from Synology Package Center if not already installed
+
+2. Create a directory for the application:
+   - Open File Station
+   - Navigate to a location like `docker` or create one
+   - Create a new folder named `whatsapp-transcribe`
+
+3. Upload files to Synology:
+   - Upload all project files to the folder you created
+   - Make sure to include your `.env` file with API keys
+   - Upload the `auth_info_baileys` folder from your local machine
+
+**Step 3: Using Docker Compose (Recommended)**
+
+1. Connect to your Synology via SSH
+
+2. Navigate to your project folder:
+   ```bash
+   cd /volume1/docker/whatsapp-transcribe
+   # Your path might be different
+   ```
+
+3. Run with Docker Compose:
+   ```bash
+   docker-compose up -d
+   ```
+
+4. Check logs:
+   ```bash
+   docker-compose logs -f
+   ```
+
+**Step 4: Using Synology Docker UI (Alternative)**
+
+1. In Synology DSM, open Docker
+
+2. Go to Registry and search for "node"
+
+3. Download the node:20-slim image
+
+4. Go to the Image tab and verify the node image is available
+
+5. Go to Container and click Create
+
+6. Select the node image and click Next
+
+7. In Advanced Settings:
+   - Name: whatsapp-transcribe
+   - Enable auto-restart
+   - Volume tab: Map `/volume1/docker/whatsapp-transcribe` to `/app`
+   - Environment tab: Add SERVER_ENV=true and any other variables from your .env file
+   - Command: `node index.js`
+
+8. Click Apply to create and start the container
+
+9. View logs from the Synology Docker UI by selecting the container and clicking Details > Log
+
+**Troubleshooting Synology Deployment**
+
+1. If you encounter connection issues (common on NAS devices):
+   - Double-check that you're using the auth data generated on your local machine
+   - Ensure proper permissions on the auth_info_baileys folder (chmod 755)
+   - Try running with different network settings (host network mode)
+
+2. If WhatsApp blocks your Synology's IP:
+   - Regenerate auth on your local machine 
+   - Transfer the new auth data to Synology
+   - Consider using a VPN on your Synology to get a different IP
 
 ### Server Environment Configuration
 
