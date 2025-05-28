@@ -35,6 +35,47 @@ A lightweight Node.js application that automatically transcribes WhatsApp voice 
 5. Scan the QR code with WhatsApp
 6. Send a voice note to test!
 
+## Usage
+
+1. Set up environment variables by copying `.env.example` to `.env` and filling in your API keys.
+2. Run `npm install` to install dependencies.
+3. Run `npm start` to start the application.
+4. Scan the QR code that appears in the terminal with your WhatsApp mobile app (Settings > Linked Devices > Link a Device).
+5. Start sending voice notes to the linked WhatsApp account to get transcriptions!
+
+## Running as a Service with PM2
+
+To keep WhatsAppTranscribe running continuously in the background, you can use PM2, a process manager for Node.js applications:
+
+1. Install PM2 globally:
+   ```
+   npm install -g pm2
+   ```
+
+2. Start the application with PM2:
+   ```
+   pm2 start index.js --name WhatsAppTranscribe
+   ```
+
+3. View logs:
+   ```
+   pm2 logs WhatsAppTranscribe
+   ```
+
+4. Configure PM2 to start on system boot:
+   ```
+   pm2 startup
+   pm2 save
+   ```
+
+5. Other useful PM2 commands:
+   ```
+   pm2 status                    # View status of all applications
+   pm2 restart WhatsAppTranscribe # Restart the application
+   pm2 stop WhatsAppTranscribe    # Stop the application
+   pm2 delete WhatsAppTranscribe  # Remove from PM2
+   ```
+
 ## Configuration
 
 The app can be configured through environment variables in your `.env` file:
@@ -59,7 +100,19 @@ The app can be configured through environment variables in your `.env` file:
 Built with assistance from:
 - GPT-4
 - Claude 3 Opus
+- Claude 3.7 Sonnet
 - [Windsurf](https://windsurf.io) IDE
+
+## Changelog
+
+### v1.2.1 (May 28, 2025)
+- Improved WhatsApp authentication system
+  - Added support for pairing code authentication as an alternative to QR codes
+  - Enhanced error handling and connection recovery
+  - Fixed QR code display in terminal
+  - Improved session management for better reliability
+- Updated all package dependencies to latest versions
+- Code refactoring for better stability and maintainability
 
 ## License
 
