@@ -4,6 +4,25 @@
 
 A lightweight Node.js application that automatically transcribes WhatsApp voice notes to text. Send a voice note, get back a transcript and summary - it's that simple!
 
+**Table of Contents**
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Usage](#usage)
+- [Deployment Options](#deployment-options)
+  - [Running as a Service with PM2](#running-as-a-service-with-pm2)
+  - [Docker Deployment](#docker-deployment)
+  - [Synology NAS Deployment](#synology-specific-instructions)
+  - [Server Deployment](#server-environment-configuration)
+- [Authentication Methods](#authentication-methods)
+  - [QR Code Authentication](#qr-code-authentication)
+  - [Pairing Code Authentication](#pairing-code-authentication)
+  - [Transferring Authentication](#transferring-authentication-recommended)
+- [Troubleshooting](#troubleshooting-connection-issues)
+- [Configuration](#configuration)
+- [Built With](#built-with)
+- [Changelog](#changelog)
+- [License](#license)
+
 ## Features
 
 - 🎙️ Transcribes WhatsApp voice notes to text (using OpenAI's Whisper or Deepgram)
@@ -212,6 +231,8 @@ The most reliable method is to first authenticate on your local machine and then
    - Transfer the new auth data to Synology
    - Consider using a VPN on your Synology to get a different IP
 
+## Deployment Options
+
 ### Server Environment Configuration
 
 If you're running on a server or VPS (like DigitalOcean, AWS, etc.), WhatsApp may block connections from these IP ranges. This is a common issue as WhatsApp actively blocks server IP addresses to prevent automation.
@@ -266,7 +287,7 @@ If you see errors like `405 Method Not Allowed` or `Connection Terminated`, your
    SERVER_ENV=true AUTH_METHOD=PAIRING_CODE npm start
    ```
 
-### Troubleshooting Connection Issues
+## Troubleshooting Connection Issues
 
 Common connection errors and solutions:
 
@@ -304,6 +325,41 @@ Common connection errors and solutions:
    4. Copy the auth folder: `scp -r auth_info_baileys user@your-server:/path/to/app/`
    5. On your server: `SERVER_ENV=true pm2 start index.js --name WhatsAppTranscribe`
 
+## Authentication Methods
+
+### QR Code Authentication
+
+QR code authentication is the simplest method for local development:
+
+1. Set these values in your `.env` file:
+   ```
+   SERVER_ENV=false
+   AUTH_METHOD=QR_CODE
+   ```
+
+2. Start the application and scan the QR code with your WhatsApp mobile app
+
+### Pairing Code Authentication
+
+Pairing code authentication is recommended for server environments:
+
+1. Set these values in your `.env` file:
+   ```
+   AUTH_METHOD=PAIRING_CODE
+   WHATSAPP_PHONE_NUMBER=12345678901  # Your number WITHOUT the + sign
+   ```
+
+2. Start the application and enter the pairing code in your WhatsApp mobile app
+
+### Transferring Authentication (Recommended)
+
+The most reliable method for server deployment:
+
+1. Authenticate on your local machine using QR code authentication
+2. Copy the `auth_info_baileys` folder to your server
+3. Set `SERVER_ENV=true` in your server's `.env` file
+4. Start the application on your server
+
 ## Configuration
 
 The app can be configured through environment variables in your `.env` file:
@@ -313,6 +369,9 @@ The app can be configured through environment variables in your `.env` file:
 - `OPENAI_API_KEY`: Your OpenAI API key
 - `ANTHROPIC_API_KEY`: Your Anthropic API key (if using Claude)
 - `DEEPGRAM_API_KEY`: Your Deepgram API key (if using Deepgram)
+- `SERVER_ENV`: Set to 'true' for server environments, 'false' for local development
+- `AUTH_METHOD`: Choose between 'QR_CODE' or 'PAIRING_CODE'
+- `WHATSAPP_PHONE_NUMBER`: Your phone number in E.164 format WITHOUT the + sign (required for pairing code)
 
 ## Built With
 

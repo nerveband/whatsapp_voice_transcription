@@ -174,6 +174,9 @@ async function main() {
     
     console.log('Starting WhatsApp connection...');
     
+    // Track if we've already requested a pairing code in this session
+    let pairingCodeRequested = false;
+    
     async function connectToWhatsApp() {
       try {
         // Prevent too many rapid reconnection attempts
@@ -189,10 +192,12 @@ async function main() {
           return;
         }
         
+        console.log(`Authentication method: ${authMethod}`);
+        
         // Create socket with configuration optimized for server environments
         const sock = makeWASocket({
           auth: state,
-          printQRInTerminal: false, // We'll handle QR code display ourselves
+          printQRInTerminal: authMethod === 'QR_CODE', // Only print QR in terminal if using QR auth
           // Common configurations for all environments
           browser: ['Chrome', 'Windows', '10'], // More common user agent to avoid blocks
           connectTimeoutMs: isServerEnvironment ? 120000 : 60000,
@@ -221,15 +226,19 @@ async function main() {
         // Handle credential updates
         sock.ev.on('creds.update', saveCreds);
         
+        let hasDisplayedQR = false; // Flag to track if we've displayed a QR code
+        let reconnectAttempt = 0; // Track reconnection attempts
+        
         // Handle connection updates with improved QR code display
         sock.ev.on('connection.update', async (update) => {
           const { connection, lastDisconnect, qr } = update;
           
           // Display QR code if provided and using QR auth method
-          if (qr && authMethod === 'QR_CODE') {
+          if (qr && authMethod === 'QR_CODE' && !hasDisplayedQR) {
             console.log('\nScan this QR code to log in:');
             qrcode.generate(qr, { small: true });
             console.log('\nOr use the pairing code authentication method by setting AUTH_METHOD=PAIRING_CODE in your .env file');
+            hasDisplayedQR = true; // Prevent multiple QR codes
           }
           
           // Handle connection states with improved error handling
@@ -241,7 +250,31 @@ async function main() {
             console.log(`Connection closed - Status: ${statusCode}, Location: ${location}, Error: ${errorMsg}`);
             
             // Handle specific error codes
-            if (statusCode === 405) {
+            if (statusCode === 428) {
+              // 428 Precondition Required - Session expired due to inactivity
+              console.log('\nRECONNECTION REQUIRED: Session expired due to inactivity (428 Precondition Required)');
+              console.log('Restarting connection to refresh session...');
+              
+              // Force credential reset to ensure clean reconnection
+              try {
+                // Save a backup of credentials first
+                const credsPath = './auth_info_baileys/creds.json';
+                if (fs.existsSync(credsPath)) {
+                  const backup = `./auth_info_baileys/creds_backup_${new Date().getTime()}.json`;
+                  fs.copyFileSync(credsPath, backup);
+                  console.log(`Credentials backed up to ${backup}`);
+                }
+                
+                // Wait before reconnecting to avoid rapid connection attempts
+                await delay(5000);
+              } catch (err) {
+                console.error('Error handling credential backup:', err);
+              }
+              
+              // Attempt reconnection with increased delay
+              setTimeout(() => connectToWhatsApp(), 10000);
+              return;
+            } else if (statusCode === 405) {
               // 405 Method Not Allowed - WhatsApp is blocking the server IP
               console.log('\nWARNING: Server IP appears to be blocked by WhatsApp.');
               console.log('Consider the following options:');
@@ -255,8 +288,16 @@ async function main() {
             
             const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
             if (shouldReconnect) {
+              // Implement exponential backoff for reconnection
+              reconnectAttempt++;
+              const reconnectDelay = Math.min(5000 * Math.pow(1.5, reconnectAttempt), 60000); // Max 1 minute
+              console.log(`Reconnection attempt ${reconnectAttempt} scheduled in ${reconnectDelay/1000} seconds...`);
+              
               // Don't reconnect immediately to avoid rapid reconnection flood
-              setTimeout(() => connectToWhatsApp(), 5000);
+              setTimeout(() => {
+                console.log(`Executing reconnection attempt ${reconnectAttempt}...`);
+                connectToWhatsApp();
+              }, reconnectDelay);
             } else {
               console.log('Logged out. Not attempting to reconnect.');
             }
@@ -268,11 +309,8 @@ async function main() {
             fs.writeFileSync('./auth_info_baileys/connection_success', new Date().toISOString());
           }
           
-          // Track if we've already requested a pairing code in this session
-          let pairingCodeRequested = false;
-          
           // Handle pairing code authentication if configured
-          if ((connection === 'connecting' || qr) && authMethod === 'PAIRING_CODE' && !pairingCodeRequested) {
+          if (connection === 'connecting' && authMethod === 'PAIRING_CODE' && !pairingCodeRequested) {
             try {
               // Only request pairing code once to prevent rapid changes
               pairingCodeRequested = true;
@@ -280,12 +318,30 @@ async function main() {
               // Format phone number (remove any non-numeric characters)
               const phoneNumber = process.env.WHATSAPP_PHONE_NUMBER.replace(/[^0-9]/g, '');
               
-              // Delay slightly before requesting the code to ensure connection is stable
-              await delay(2000);
+              // Give WhatsApp time to establish a stable connection first
+              await delay(5000);
               
-              // Request pairing code
+              // Clear any QR code display in terminal before showing pairing code
+              console.clear();
+              
+              // Validate phone number format
+              if (!/^[0-9]{10,15}$/.test(phoneNumber)) {
+                console.error('ERROR: Phone number must be in E.164 format WITHOUT the plus sign');
+                console.error('Example: 12345678901 (not +12345678901)');
+                setTimeout(() => { pairingCodeRequested = false; }, 10000);
+                return;
+              }
+              
               console.log(`Requesting pairing code for ${phoneNumber}...`);
+              
+              // Request pairing code with proper error handling
               const code = await sock.requestPairingCode(phoneNumber);
+              
+              if (!code) {
+                console.error('ERROR: No pairing code received from WhatsApp');
+                setTimeout(() => { pairingCodeRequested = false; }, 15000);
+                return;
+              }
               
               // Display the code prominently
               console.log('\n=======================================');
@@ -296,51 +352,20 @@ async function main() {
               console.log('\nThis code will remain valid for 60 seconds.\n');
               
               // Reset flag after a timeout so we can request again if needed
-              setTimeout(() => { pairingCodeRequested = false; }, 60000);
+              setTimeout(() => { 
+                pairingCodeRequested = false;
+                console.log('Pairing code expired. Requesting a new one...');
+              }, 60000);
             } catch (error) {
               console.error('Failed to request pairing code:', error);
+              console.log('\nTROUBLESHOOTING TIPS:');
+              console.log('1. Make sure your phone number is correctly formatted (no + sign)');
+              console.log('2. Check that your WhatsApp mobile app is up to date');
+              console.log('3. Verify your phone has an active internet connection');
+              console.log('4. If on a server, your IP may be blocked by WhatsApp');
+              
               // Reset flag after error to allow retry
-              setTimeout(() => { pairingCodeRequested = false; }, 10000);
-            }
-          }
-        });
-
-        sock.ev.on('messages.upsert', async ({ messages }) => {
-          const m = messages[0];
-
-          if (!m.message) return; // if there is no text or media message
-          if (m.key.remoteJid === 'status@broadcast') return;
-
-          const messageType = Object.keys(m.message)[0]; // get what type of message it is -- text, image, video
-
-          if (messageType === 'audioMessage') {
-            console.log(MESSAGE_OUTPUT.VOICE_NOTE_RECEIVED);
-
-            const buffer = await downloadContentFromMessage(m.message.audioMessage, 'audio');
-            const oggFilename = `${m.key.id}.ogg`;
-            await writeFile(oggFilename, buffer);
-
-            try {
-              console.log(MESSAGE_OUTPUT.TRANSCRIBING_VOICE_NOTE);
-              const transcription = await transcribeAudio(oggFilename);
-
-              if (transcription) {
-                const senderId = m.key.remoteJid;
-
-                if (config.GENERATE_SUMMARY === 'true') {
-                  const summaryAndActionSteps = await getSummaryAndActionSteps(transcription);
-                  await sock.sendMessage(senderId, { text: `*Summary:*\n${summaryAndActionSteps}` });
-                }
-
-                await sock.sendMessage(senderId, { text: `*Transcript:*\n${transcription}` });
-                console.log('Processing completed successfully.');
-              } else {
-                console.log(MESSAGE_OUTPUT.PROCESSING_ERROR);
-              }
-            } catch (error) {
-              console.error('Error:', error);
-            } finally {
-              fs.unlinkSync(oggFilename);
+              setTimeout(() => { pairingCodeRequested = false; }, 15000);
             }
           }
         });
@@ -381,7 +406,14 @@ async function main() {
             } catch (error) {
               console.error('Error:', error);
             } finally {
-              fs.unlinkSync(oggFilename);
+              // Safe file deletion with error handling
+              try {
+                if (fs.existsSync(oggFilename)) {
+                  fs.unlinkSync(oggFilename);
+                }
+              } catch (deleteError) {
+                console.error(`Warning: Could not delete temporary file ${oggFilename}:`, deleteError.message);
+              }
             }
           }
         });
