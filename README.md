@@ -78,7 +78,9 @@ To keep WhatsAppTranscribe running continuously in the background, you can use P
 
 ### Server Environment Configuration
 
-If you're running on a server or VPS (like DigitalOcean, AWS, etc.), WhatsApp may block connections from these IP ranges. To improve connection reliability on servers:
+If you're running on a server or VPS (like DigitalOcean, AWS, etc.), WhatsApp may block connections from these IP ranges. This is a common issue as WhatsApp actively blocks server IP addresses to prevent automation.
+
+#### Basic Server Setup
 
 1. Set `SERVER_ENV=true` in your `.env` file:
    ```
@@ -101,11 +103,32 @@ If you're running on a server or VPS (like DigitalOcean, AWS, etc.), WhatsApp ma
    SERVER_ENV=true pm2 start index.js --name WhatsAppTranscribe
    ```
 
-5. If still encountering connection issues:
-   - Try a different browser identification in the code
-   - Some VPS providers are more likely to be blocked by WhatsApp
-   - Consider using a residential IP proxy service
-   - Run the application locally and then move the auth files to your server
+#### Dealing with WhatsApp Server Blocks
+
+If you see errors like `405 Method Not Allowed` or `Connection Terminated`, your server IP is likely being blocked by WhatsApp. Here are your options:
+
+1. **Most Reliable Solution**: If your server IP is being blocked by WhatsApp (which is common with VPS providers), the most reliable solution is to generate the authentication on a non-server device (like your laptop) and then transfer the auth_info_baileys folder to your server.
+
+   Steps:
+   - Run the application on your local computer: `npm start`
+   - Complete authentication with QR code or pairing code
+   - Copy the entire `auth_info_baileys` folder to your server:
+     ```bash
+     scp -r auth_info_baileys user@your-server:/path/to/whatsapp-transcribe/
+     ```
+   - Start the application on your server with existing auth
+
+2. **Try Different Times**: WhatsApp sometimes has less strict blocking during certain hours. Try connecting at different times.
+
+3. **Use a Residential Proxy**: Set up a residential proxy service to route your WhatsApp connection through non-datacenter IPs.
+
+4. **VPS Provider Matters**: Some VPS providers have IP ranges that are less likely to be blocked. AWS and Google Cloud IPs are often more heavily blocked than smaller providers.
+
+5. **Reset Connection**: If you're seeing connection errors, try a complete reset:
+   ```bash
+   rm -rf auth_info_baileys
+   SERVER_ENV=true AUTH_METHOD=PAIRING_CODE npm start
+   ```
 
 ### Troubleshooting Connection Issues
 
@@ -116,15 +139,34 @@ Common connection errors and solutions:
    - Use the pairing code method, not QR code
    - Try starting with a fresh authentication (delete auth_info_baileys folder)
    - Run with increased verbosity: `DEBUG=baileys* npm start`
+   - Look for the `location` code in the error (e.g., `frc`, `lla`, `cln`) - these indicate where in the connection process WhatsApp is blocking you
 
 2. **Connection Closed** - Connection was interrupted:
    - Check your internet connection
    - WhatsApp might be blocking the connection
    - Try with a fresh session after deleting auth_info_baileys
+   - If this happens after a successful connection, your auth is likely still valid - just restart the app
 
 3. **Cannot read properties of undefined** - Auth data might be corrupted:
    - Delete auth_info_baileys folder
    - Restart with fresh authentication
+
+4. **Pairing Code Changes Too Quickly** - When multiple codes appear rapidly:
+   - This happens when WhatsApp keeps closing your connection and the app keeps retrying
+   - Use the most recent pairing code shown in the terminal
+   - If no code works, this is a clear sign your server IP is blocked - use the laptop auth transfer method
+
+5. **Debugging With Logs**:
+   - Run with debug logs: `DEBUG=baileys* npm start`
+   - Check for patterns in the connection failures
+   - Look for specific error codes and locations in the logs
+
+6. **Authentication Transfer Steps**:
+   1. On your local machine: `npm start` and complete authentication
+   2. Verify a successful connection (you should see "Connection established successfully!")
+   3. Stop the application (Ctrl+C)
+   4. Copy the auth folder: `scp -r auth_info_baileys user@your-server:/path/to/app/`
+   5. On your server: `SERVER_ENV=true pm2 start index.js --name WhatsAppTranscribe`
 
 ## Configuration
 
