@@ -155,19 +155,29 @@ async function main() {
         const sock = makeWASocket({
           auth: state,
           printQRInTerminal: false, // We'll handle QR code display ourselves
-          // Use browser values known to work with WhatsApp servers
-          browser: ['Chrome', 'Desktop', '104.0.0.0'],
-          // Add server-specific configurations when needed
+          // Common configurations for all environments
+          browser: ['Chrome', 'Windows', '10'], // More common user agent to avoid blocks
+          connectTimeoutMs: isServerEnvironment ? 120000 : 60000,
+          keepAliveIntervalMs: 30000,
+          emitOwnEvents: false,
+          fireInitQueries: false, // Disable initial queries that can trigger blocks
+          // Additional server-specific configurations
           ...(isServerEnvironment && {
-            // Avoid detection as server environment
+            // Disable features that can trigger server detection
             syncFullHistory: false,
             markOnlineOnConnect: false,
-            // Increase timeouts for server environments
-            connectTimeoutMs: 120000,
-            keepAliveIntervalMs: 15000,
-            // Avoid triggering rate limits
-            patchMessageBeforeSending: msg => msg
-          })
+            transactionOpts: { maxCommitRetries: 10, delayBetweenTriesMs: 3000 },
+            getMessage: async () => undefined, // Avoid unnecessary fetches
+            // Use retry and timeout configs that reduce server signature
+            retryRequestDelayMs: 5000,
+            qrTimeout: 60000,
+            defaultQueryTimeoutMs: 120000
+          }),
+          // Handle message sending in a way less likely to be flagged
+          patchMessageBeforeSending: msg => {
+            if (msg.viewOnce) delete msg.viewOnce; // Fix for view once messages
+            return msg;
+          }
         });
         
         // Handle credential updates
@@ -296,31 +306,36 @@ async function main() {
           }
         });
 
-        try {
-          await sock.query({
-            tag: 'iq',
-            attrs: {
-              to: '@s.whatsapp.net',
-              type: 'set',
-              xmlns: 'w:web',
-            },
-            content: [
-              {
-                tag: 'query',
-                attrs: {},
-                content: [
-                  {
-                    tag: 'initial_queries',
-                    attrs: {},
-                    content: [],
-                  },
-                ],
+        // Skip the initial status query on server environments to reduce chance of connection blocks
+        if (!isServerEnvironment) {
+          try {
+            await sock.query({
+              tag: 'iq',
+              attrs: {
+                to: '@s.whatsapp.net',
+                type: 'set',
+                xmlns: 'w:web',
               },
-            ],
-          });
-          console.log('Initial queries executed successfully');
-        } catch (error) {
-          console.error('Error executing initial queries:', error);
+              content: [
+                {
+                  tag: 'query',
+                  attrs: {},
+                  content: [
+                    {
+                      tag: 'initial_queries',
+                      attrs: {},
+                      content: [],
+                    },
+                  ],
+                },
+              ],
+            });
+            console.log('Initial queries executed successfully');
+          } catch (error) {
+            console.error('Error executing initial queries:', error);
+          }
+        } else {
+          console.log('Skipping initial queries in server environment to avoid connection blocks');
         }
       } catch (error) {
         console.error('Error in connectToWhatsApp function:', error);

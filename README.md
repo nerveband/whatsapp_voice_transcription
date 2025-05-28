@@ -85,18 +85,46 @@ If you're running on a server or VPS (like DigitalOcean, AWS, etc.), WhatsApp ma
    SERVER_ENV=true
    ```
 
-2. For persistent sessions on servers, always use the same auth folder between restarts.
+2. For persistent sessions on servers, **ALWAYS use the pairing code method instead of QR code**:
+   ```
+   AUTH_METHOD=PAIRING_CODE
+   WHATSAPP_PHONE_NUMBER=12345678901  # Your number without the + sign
+   ```
 
-3. If you encounter connection issues (`405 Method Not Allowed` errors):
-   - Delete the auth_info_baileys folder to start fresh
-   - Try using the pairing code method instead of QR code
-   - Set `AUTH_METHOD=PAIRING_CODE` in your `.env` file
-   - Make sure your phone number is in the correct format
-   
+3. Delete any existing auth data to start fresh:
+   ```bash
+   rm -rf auth_info_baileys
+   ```
+
 4. Start the application with the server environment flag:
    ```
    SERVER_ENV=true pm2 start index.js --name WhatsAppTranscribe
    ```
+
+5. If still encountering connection issues:
+   - Try a different browser identification in the code
+   - Some VPS providers are more likely to be blocked by WhatsApp
+   - Consider using a residential IP proxy service
+   - Run the application locally and then move the auth files to your server
+
+### Troubleshooting Connection Issues
+
+Common connection errors and solutions:
+
+1. **405 Method Not Allowed** - This typically means WhatsApp is blocking your IP or connection method:
+   - Make sure `SERVER_ENV=true` is set
+   - Use the pairing code method, not QR code
+   - Try starting with a fresh authentication (delete auth_info_baileys folder)
+   - Run with increased verbosity: `DEBUG=baileys* npm start`
+
+2. **Connection Closed** - Connection was interrupted:
+   - Check your internet connection
+   - WhatsApp might be blocking the connection
+   - Try with a fresh session after deleting auth_info_baileys
+
+3. **Cannot read properties of undefined** - Auth data might be corrupted:
+   - Delete auth_info_baileys folder
+   - Restart with fresh authentication
 
 ## Configuration
 
