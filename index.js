@@ -82,7 +82,7 @@ const anthropic = new Anthropic({
 async function getOpenAISummary(text) {
   try {
     // Use the OpenAI SDK to generate a summary
-    const chatCompletion = await openai.createChatCompletion({
+    const chatCompletion = await openai.chat.completions.create({
       model: config.OPENAI_MODEL,
       messages: [
         { role: 'system', content: AI_PROMPT.OPENAI },
@@ -93,7 +93,7 @@ async function getOpenAISummary(text) {
       temperature: 0.5,
     });
 
-    return chatCompletion.data.choices[0].message.content.trim();
+    return chatCompletion.choices[0].message.content.trim();
   } catch (error) {
     console.error('Error during OpenAI summary generation:', error);
     throw error;

@@ -21,7 +21,7 @@ async function transcribeAudioWithOpenAI(filePath) {
 
   console.log('Response from OpenAI:', response.data);
 
-  return response.data;
+  return response.data.text;
 }
 
 async function transcribeAudioWithDeepgram(filePath) {
