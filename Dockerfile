@@ -1,4 +1,4 @@
-FROM node:20-slim
+FROM node:22-slim
 
 # Install ffmpeg which is required for audio processing
 RUN apt-get update && \

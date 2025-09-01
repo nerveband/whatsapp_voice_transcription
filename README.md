@@ -62,6 +62,36 @@ A lightweight Node.js application that automatically transcribes WhatsApp voice 
 4. Scan the QR code that appears in the terminal with your WhatsApp mobile app (Settings > Linked Devices > Link a Device).
 5. Start sending voice notes to the linked WhatsApp account to get transcriptions!
 
+### Upgrading Standard Installation
+
+To upgrade your standard (non-Docker) installation to the latest version:
+
+1. Stop the running application:
+   - If using PM2: `pm2 stop WhatsAppTranscribe`
+   - If running directly: Press `Ctrl+C` in the terminal
+
+2. Pull the latest code:
+   ```bash
+   git pull origin master
+   ```
+
+3. Update dependencies:
+   ```bash
+   npm install
+   npm update
+   ```
+
+4. For major version updates (if needed):
+   ```bash
+   npm install @anthropic-ai/sdk@latest @deepgram/sdk@latest openai@latest dotenv@latest --save
+   ```
+
+5. Restart the application:
+   - With PM2: `pm2 restart WhatsAppTranscribe`
+   - Without PM2: `npm start`
+
+**Note**: Your authentication data in `auth_info_baileys` and environment settings in `.env` will be preserved during the upgrade.
+
 ## Running as a Service with PM2
 
 To keep WhatsAppTranscribe running continuously in the background, you can use PM2, a process manager for Node.js applications:
@@ -127,6 +157,37 @@ You can run WhatsAppTranscribe in a Docker container, which works great for NAS 
    ```bash
    docker-compose logs -f
    ```
+
+### Upgrading Docker Installation
+
+To upgrade your Docker installation to the latest version:
+
+1. Stop the running container:
+   ```bash
+   docker-compose down
+   ```
+
+2. Pull the latest code:
+   ```bash
+   git pull origin master
+   ```
+
+3. Rebuild the Docker image with the latest changes:
+   ```bash
+   docker-compose build --no-cache
+   ```
+
+4. Start the updated container:
+   ```bash
+   docker-compose up -d
+   ```
+
+5. Verify the upgrade:
+   ```bash
+   docker-compose logs -f
+   ```
+
+**Note**: Your authentication data in `auth_info_baileys` will be preserved during the upgrade.
 
 ### Synology-specific Instructions
 
@@ -392,7 +453,20 @@ Built with assistance from:
 
 ## Changelog
 
-### v1.2.1 (May 28, 2025)
+### v1.2.2 (December 2024)
+- Updated all dependencies to latest versions:
+  - @anthropic-ai/sdk: 0.33.1 → 0.60.0
+  - @deepgram/sdk: 3.2.0 → 4.11.2
+  - openai: 4.35.0 → 5.16.0
+  - dotenv: 16.4.5 → 17.2.1
+  - mongoose: 8.8.3 → 8.18.0
+- Updated Docker configuration:
+  - Node.js base image: 20-slim → 22-slim
+  - Docker Compose version: 3 → 3.9
+- Added comprehensive upgrade instructions for both Docker and standard installations
+- Improved documentation with clear upgrade paths
+
+### v1.2.1 (May 28, 2024)
 - Improved WhatsApp authentication system
   - Added support for pairing code authentication as an alternative to QR codes
   - Enhanced error handling and connection recovery
