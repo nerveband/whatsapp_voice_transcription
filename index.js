@@ -79,9 +79,19 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+// Verify OpenAI client initialization
+console.log('OpenAI client initialized with API key:', process.env.OPENAI_API_KEY ? 'Present' : 'Missing');
+console.log('Using OpenAI model:', config.OPENAI_MODEL);
+
 async function getOpenAISummary(text) {
   try {
-    // Use the OpenAI SDK to generate a summary
+    console.log("Debug: Attempting to summarize text with OpenAI:", text);
+    if (!text.trim()) {
+      console.log("Error: No content to summarize");
+      return "No content received for summarization.";
+    }
+
+    // Use the OpenAI SDK v4+ syntax to generate a summary
     const chatCompletion = await openai.chat.completions.create({
       model: config.OPENAI_MODEL,
       messages: [
@@ -89,13 +99,13 @@ async function getOpenAISummary(text) {
         { role: 'user', content: text },
       ],
       max_tokens: 2000,
-      n: 1,
       temperature: 0.5,
     });
 
     return chatCompletion.choices[0].message.content.trim();
   } catch (error) {
     console.error('Error during OpenAI summary generation:', error);
+    console.error('OpenAI Error details:', error.message);
     throw error;
   }
 }

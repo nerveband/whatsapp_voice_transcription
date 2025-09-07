@@ -65,7 +65,6 @@ For detailed setup, configuration, and deployment instructions, visit our **[Git
 ## Community & Support
 
 - **[Issues](https://github.com/nerveband/wa-transcript/issues)** - Report bugs or request features
-- **[Discussions](https://github.com/nerveband/wa-transcript/discussions)** - Community support and ideas
 - **[Wiki](../../wiki)** - Comprehensive documentation
 
 ## Built With

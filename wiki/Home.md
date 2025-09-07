@@ -59,7 +59,6 @@ Welcome to the comprehensive documentation for WhatsApp Voice Transcription - a 
 ## Support & Community
 
 - **[GitHub Issues](https://github.com/nerveband/wa-transcript/issues)** - Report bugs or request features
-- **[GitHub Discussions](https://github.com/nerveband/wa-transcript/discussions)** - Community support and ideas
 - **[Main Repository](https://github.com/nerveband/wa-transcript)** - Source code and releases
 
 ---
@@ -67,4 +66,4 @@ Welcome to the comprehensive documentation for WhatsApp Voice Transcription - a 
 > **⚠️ Important Notice**  
 > This app uses third-party AI services to transcribe audio files and generate summaries. Audio files will be sent to these services. Additionally, this app uses an unofficial WhatsApp library which may break or result in account restrictions from Meta.
 
-**Last updated**: January 2025
+**Last updated**: September 2025
