@@ -74,6 +74,14 @@ For detailed setup, configuration, and deployment instructions, visit our **[Git
 - [@anthropic-ai/sdk](https://www.npmjs.com/package/@anthropic-ai/sdk) - Anthropic Claude API
 - [@deepgram/sdk](https://www.npmjs.com/package/@deepgram/sdk) - Deepgram API SDK
 
+## Changelog
+
+See the **[Upgrade Guide](../../wiki/Upgrade-Guide)** for version history and breaking changes.
+
+## Created By
+
+Created by **[Ashraf Ali](https://ashrafali.net)** - Check out my other projects!
+
 ## License
 
 This project is MIT Licensed. See the [LICENSE](LICENSE.md) file for details.
