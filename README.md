@@ -55,12 +55,12 @@ For detailed setup, configuration, and deployment instructions, visit our **[Git
 
 ## Supported AI Providers
 
-| Provider | Service | Models | Status |
-|----------|---------|---------|--------|
-| **OpenAI** | Transcription | whisper-1 | ✅ Active |
-| **OpenAI** | Summarization | gpt-4o, gpt-4o-mini, o1-pro, o3-mini | ✅ Active |
-| **Deepgram** | Transcription | nova-3, nova-2, nova | ✅ Active |
-| **Anthropic** | Summarization | claude-sonnet-4, claude-3.5-sonnet, claude-3.5-haiku | ✅ Active |
+| Provider | Service | Status |
+|----------|---------|--------|
+| **OpenAI** | Transcription | ✅ Active |
+| **OpenAI** | Summarization | ✅ Active |
+| **Deepgram** | Transcription | ✅ Active |
+| **Anthropic** | Summarization | ✅ Active |
 
 ## Community & Support
 
