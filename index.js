@@ -102,21 +102,26 @@ async function getOpenAISummary(text) {
 
 
 async function getAnthropicSummary(text) {
-    console.log("Debug: Attempting to summarize text:", text);  // Debug log to check what text is being sent
+    console.log("Debug: Attempting to summarize text:", text);
     if (!text.trim()) {
         console.log("Error: No content to summarize");
         return "No content received for summarization.";
     }
     
     try {
-        const chatCompletion = await anthropic.messages.create({
-            messages: [{ role: 'user', content: text }],
+        const message = await anthropic.messages.create({
             model: config.ANTHROPIC_MODEL,
             max_tokens: 2000,
             system: AI_PROMPT.ANTHROPIC,
+            messages: [
+                { 
+                    role: 'user', 
+                    content: text 
+                }
+            ]
         });
 
-        return chatCompletion.content[0].text;
+        return message.content[0].text;
     } catch (error) {
         console.error('Error during Claude summary generation:', error);
         throw error;
