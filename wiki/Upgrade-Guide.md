@@ -159,10 +159,29 @@ volumes:
 
 ## Breaking Changes by Version
 
-### Version 1.3.0 (Latest)
+### Version 1.4.0 (Latest - September 2025)
 **New Features:**
-- Updated AI model support (GPT-4o, Claude 3.5, Deepgram Nova-3)
-- Streamlined README with wiki documentation
+- Comprehensive GitHub Wiki documentation with 14 detailed pages
+- Streamlined README with improved navigation (83% size reduction)
+- Latest AI model support: OpenAI GPT-5-nano, Claude 3.5 Haiku, Deepgram Nova-3
+- Complete deployment guides for Docker, Server, Synology NAS, and PM2
+- Enhanced authentication troubleshooting and transfer guides
+- Contributing guidelines and upgrade documentation
+
+**Breaking Changes:**
+- **README structure completely redesigned** - moved from 480+ lines to 85 lines
+- All detailed documentation moved to GitHub Wiki pages
+- Some environment variable recommendations updated
+
+**Migration Steps:**
+1. Update `.env` with latest model recommendations (see `.env.example`)
+2. Bookmark new [GitHub Wiki](../../wiki) for documentation
+3. Review new deployment options if using custom setup
+4. Check [CHANGELOG.md](../CHANGELOG.md) for complete version history
+
+### Version 1.3.0
+**New Features:**
+- Updated AI model support (GPT-4o, Claude 3.5, Deepgram Nova-3)  
 - Enhanced error handling
 
 **Breaking Changes:**
@@ -170,7 +189,6 @@ volumes:
 
 **Migration Steps:**
 1. Update `.env` with new model options (optional)
-2. Review new wiki documentation links
 
 ### Version 1.2.1
 **New Features:**

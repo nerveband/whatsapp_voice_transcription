@@ -76,7 +76,8 @@ For detailed setup, configuration, and deployment instructions, visit our **[Git
 
 ## Changelog
 
-See the **[Upgrade Guide](../../wiki/Upgrade-Guide)** for version history and breaking changes.
+- **[CHANGELOG.md](CHANGELOG.md)** - Complete version history and release notes
+- **[Upgrade Guide](../../wiki/Upgrade-Guide)** - Detailed upgrade instructions and breaking changes
 
 ## Created By
 
