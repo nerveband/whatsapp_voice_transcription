@@ -212,7 +212,7 @@ async function main() {
         // Create socket with configuration optimized for server environments
         const sock = makeWASocket({
           auth: state,
-          printQRInTerminal: authMethod === 'QR_CODE', // Only print QR in terminal if using QR auth
+          // Note: printQRInTerminal removed in Baileys 7.x - QR handled in connection.update event
           // Common configurations for all environments
           browser: ['Chrome', 'Windows', '10'], // More common user agent to avoid blocks
           connectTimeoutMs: isServerEnvironment ? 120000 : 60000,

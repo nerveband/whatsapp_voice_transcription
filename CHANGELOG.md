@@ -5,6 +5,31 @@ All notable changes to WhatsApp Voice Transcription will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-01-24
+
+### Changed
+- **BREAKING**: Upgraded to Baileys 7.x (from 6.x) - requires re-authentication
+- **BREAKING**: Upgraded to OpenAI SDK 6.x (from 5.x)
+- **BREAKING**: Upgraded to Mongoose 9.x (from 8.x)
+- Removed deprecated `printQRInTerminal` option (now handled via connection.update event)
+
+### Updated Dependencies
+- `@anthropic-ai/sdk`: 0.61.0 → 0.71.2
+- `@deepgram/sdk`: 4.11.2 → 4.11.3
+- `@whiskeysockets/baileys`: 6.7.19 → 7.0.0-rc.9
+- `axios`: 1.11.0 → 1.13.2
+- `dotenv`: 17.2.1 → 17.2.3
+- `form-data`: 4.0.4 → 4.0.5
+- `mongoose`: 8.18.0 → 9.1.5
+- `openai`: 5.19.1 → 6.16.0
+- `ws`: 8.18.3 → 8.19.0
+
+### Migration Notes
+- Delete `auth_info_baileys/` folder and re-authenticate via QR code
+- No code changes required for OpenAI or Mongoose upgrades (APIs compatible)
+
+---
+
 ## [1.4.0] - 2025-09-07
 
 ### Added
@@ -128,6 +153,7 @@ sed -i 's/TRANSCRIPTION_SERVICE/VOICE_TRANSCRIPTION_SERVICE/g' .env
 
 ## Version History Summary
 
+- **1.5.0**: Major SDK upgrades - Baileys 7.x, OpenAI 6.x, Mongoose 9.x, Anthropic SDK 0.71
 - **1.4.0**: Major documentation overhaul with GitHub Wiki, README streamlining, latest AI models
 - **1.3.0**: Updated AI models and enhanced error handling
 - **1.2.1**: Improved authentication and server environment support
