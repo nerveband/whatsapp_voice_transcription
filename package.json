@@ -24,5 +24,8 @@
     "openai": "^6.16.0",
     "qrcode-terminal": "^0.12.0",
     "ws": "^8.19.0"
+  },
+  "overrides": {
+    "protobufjs": ">=7.5.5"
   }
 }
